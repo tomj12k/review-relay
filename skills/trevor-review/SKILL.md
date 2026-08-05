@@ -9,8 +9,59 @@ Apply Trevor's observable review method without impersonating him. Attribute eve
 posted review to the actual reviewer/model; use the user's required label, or
 `Codex/GPT-5.6@xhigh` by default.
 
-This skill is self-contained. Do not load another detection-review skill unless the
-user explicitly requests it.
+This skill owns the review **method** and is self-contained in that respect. Do not load
+another detection-review skill unless the user explicitly requests it.
+
+## Supporting skills
+
+Load these for *subject-matter* knowledge the method needs. None of them replaces a step
+here, and none of them relaxes the evidence bar: whatever they tell you is a reason to go
+look, never a substitute for a probe.
+
+**All optional — load if available.** They are separate installs, and this skill does not
+ship them. A missing one means you skip that row and do the work unaided; it does not mean
+the review is degraded or blocked. Never report a review as incomplete because a
+supporting skill was absent, and never tell the user to install one mid-review — note it
+at the end if it would genuinely have helped. The repo's README lists sources and licences
+for anyone who wants them.
+
+| Load | When | What it buys the review |
+|---|---|---|
+| `python-programmer` | the rule targets Python, or the code under review is Python | Names the defect classes worth probing for — mutable default arguments, bare `except:`/swallowed errors, `eval`/`exec` on untrusted input, string-concatenated SQL, missing context managers — and the tools that produce evidence rather than opinion (`ruff` incl. its `S` security rules, `bandit`, `pydoclint`, `ty`/`mypy`/`pyright`). Also fixes which Python version's semantics you are arguing about, which decides whether a "vulnerable state" is still reachable. |
+| `test-design-philosophy` | judging a PR's fixtures, or writing the regression required before a fix | Supplies the standard for "is this fixture evidence?". Directly serves two rules here: *passing self-authored fixtures proves only that the checked-in contract executes*, and *a fixture asserting a shape IS vulnerable carries a finding's burden of proof*. Its mock-at-boundaries rule is how you tell a real coverage gap from an over-mocked test that never exercised the rule. |
+| `git-version-control` | establishing the review object, or preparing the commit after fixes | Worktree and branch discipline for "work in a clean isolated clone, preserve unrelated user changes", and the atomic-commit standard for the fix-up commits. Its checkpoint pattern gives you a restore point before an edit without bypassing hooks. |
+| `software-engineer` | a finding turns on design rather than detection — ownership boundaries, rule decomposition, whether a guard belongs in rule A or rule B | Vocabulary for arguing about abstraction boundaries, which is what the *handover guard* and *duplicate coverage* sections are really about. Skip it for ordinary pattern-level findings; it is a large skill and most findings do not need it. |
+| `test-driven-development` (superpowers) | **fixing** a finding, not reviewing one | The RED-GREEN-REFACTOR discipline behind this skill's rule that a regression asserting the customer-visible oracle goes in *before* the rule is edited. Its value here is the order: watch the regression fail against the pre-fix head, so you know it detects the defect rather than merely passing after the fix. |
+| `aws-cdk-development` | the artifact is CDK/CloudFormation, or the rule targets IaC | The construct semantics behind an IaC finding — whether a property the rule flags is actually the one that governs the exposure, and whether CDK's L2 defaults already set it safely. Its `scripts/validate-stack.sh` is a read-only `cdk synth` + template check, usable as a probe harness. Carries a `PreToolUse` hook that prints the target AWS account before any `cdk deploy`. |
+| `interactive-research` | an upstream claim is load-bearing, contested, and not settled by one doc page | Serves the step *"verify unstable API/runtime claims against current primary upstream documentation"*. Its per-claim epistemic labels map onto this skill's own CONFIRMED/UNPROVEN split, and its `fact-checker` agent verifies one claim against one source in a fresh context — useful when you need a check that wasn't primed by the review thread. |
+| `deep-research` | never load it to do research | A routing notice only. It disambiguates "deep research" and hands off to `interactive-research`. |
+
+## Choosing between the two testing skills
+
+They have confusingly similar names and opposite triggers:
+
+- **`test-driven-development`** (superpowers) — the *process*. Use when **making** a fix.
+- **`test-design-philosophy`** — the *judgment*. Use when **reviewing** someone's tests:
+  is this fixture evidence, is the mock boundary in the right place, does a green suite
+  prove anything.
+
+A review that reaches for the process skill and a fix that reaches for the judgment skill
+are both the wrong way round.
+
+## Research is bounded here
+
+`interactive-research` spawns a persistent agent team — one context window per teammate,
+resident until dismissed. That is disproportionate for the usual review question, which is
+"does this library still accept this config?" and is answered by one `WebFetch` of the
+upstream docs. Reach for the team only when a claim is genuinely contested across sources
+and the finding turns on it. Fetching one doc page is not research; do that inline.
+
+**None of these are review authorities.** A rule is not correct because
+`python-programmer` says the idiom is fine, a fixture is not sound because
+`test-design-philosophy` approves its shape, and a claim is not established because a
+research agent labelled it well-supported. Every verdict still rests on a probe run
+against the real artifact on the pinned engine, with its paired control. Research raises
+or lowers your *prior*; only the probe produces a finding.
 
 ## Establish the review object
 

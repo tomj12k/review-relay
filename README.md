@@ -58,6 +58,44 @@ run the review relay on PR 1234
 Claude picks the skill up from its description; you can also invoke `trevor-review` or
 `perplexity-panel` by name for the narrower jobs.
 
+## Optional supporting skills
+
+`trevor-review` names a few skills it will pull in for subject-matter knowledge when they
+happen to be installed — Python defect classes, CDK construct semantics, what makes a
+fixture trustworthy. **None of them ship here and none of them are required.** A missing
+one means that row is skipped and the reviewer does the work unaided; the method, the
+evidence bar, and the P1/P2 gate are unchanged either way.
+
+They are listed so you can install exactly the ones you want, from the original source
+rather than a re-host.
+
+| Skill | Install it if | Source | Licence |
+|---|---|---|---|
+| `python-programmer` | you review Python, or rules that target it | [Pyroxin/opinionated-claude-skills](https://github.com/Pyroxin/opinionated-claude-skills) `opinionated-python-development` | EPL-2.0 |
+| `software-engineer` | findings turn on design — ownership boundaries, rule decomposition | same repo, `opinionated-software-engineering` | EPL-2.0 |
+| `git-version-control` | you want worktree/branch discipline for the review object | same repo, `opinionated-software-engineering` | EPL-2.0 |
+| `test-driven-development` | you fix findings as well as report them | [superpowers plugin](https://github.com/anthropics/claude-code) (official marketplace) | — |
+| `test-design-philosophy` (rename on install — see below) | you review other people's fixtures | same repo, `opinionated-software-engineering` → `test-driven-development` | EPL-2.0 |
+| `aws-cdk-development` | the artifact is CDK/CloudFormation or IaC | [zxkane/aws-skills](https://github.com/zxkane/aws-skills) `aws-iac` | MIT |
+| `interactive-research` | upstream claims are contested and load-bearing | [Pyroxin/opinionated-claude-skills](https://github.com/Pyroxin/opinionated-claude-skills) `opinionated-research` | EPL-2.0 |
+
+Two things worth knowing before you install any of them:
+
+- **The two testing skills collide by name.** Superpowers ships
+  `test-driven-development` and so does `opinionated-software-engineering`. Install the
+  second under a different directory name (this setup calls it `test-design-philosophy`)
+  and update its `name:` field to match, or one will shadow the other. They do different
+  jobs — superpowers' owns the RED-GREEN-REFACTOR *process* when you're fixing; the other
+  owns the *judgment* about whether a test is worth trusting when you're reviewing.
+- **`software-engineer` declares itself mandatory.** Its upstream description ends
+  "MUST ALWAYS be loaded when working on any kind of software development or design
+  task!", which pulls ~1000 lines into every coding turn. Worth softening that line to a
+  design/architecture trigger unless you want it always resident.
+- **`aws-cdk-development` registers a hook.** Its frontmatter adds a `PreToolUse` hook
+  that runs `aws sts get-caller-identity` once before any `cdk deploy`. It is read-only
+  and useful — it prints the account you're about to deploy into — but it executes without
+  prompting, so know it is there.
+
 ## What each stage needs
 
 Every stage is optional except 0 and 4 — the relay skips what you don't have and says
