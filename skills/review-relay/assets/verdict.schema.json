@@ -1,0 +1,42 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "reviews": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "finding": {
+            "type": "integer",
+            "description": "Ledger id of the finding being adjudicated."
+          },
+          "best_supported_position": {
+            "type": "string",
+            "description": "The position the evidence supports, stated plainly. Not a vote count."
+          },
+          "reasoning": {
+            "type": "string",
+            "description": "Why the artifact supports that position. Cite the lines, not the consensus."
+          },
+          "all_missed": {
+            "type": "string",
+            "description": "What every prior stage missed on this finding, or an explicit 'nothing'."
+          }
+        },
+        "required": [
+          "finding",
+          "best_supported_position",
+          "reasoning",
+          "all_missed"
+        ]
+      }
+    },
+    "overall": {
+      "type": "string",
+      "description": "Disposition of the artifact as a whole, including anything no finding covers."
+    }
+  },
+  "required": ["reviews", "overall"]
+}

@@ -1,0 +1,20 @@
+# relay run artifacts — never commit a review's working directory
+run-*/
+*/raw-*.out
+*/raw-*.err
+*/raw-*.json
+*/raw-*.txt
+timings.tsv
+ledger.jsonl
+findings-ledger.jsonl
+frozen-context.md
+frozen-prompt.txt
+arbitration.md
+adjudication.md
+
+# python
+__pycache__/
+*.pyc
+
+# macos
+.DS_Store
